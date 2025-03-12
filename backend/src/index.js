@@ -1,0 +1,34 @@
+import express from 'express'
+import authRoutes from './routes/auth.route.js'
+import messageRoutes from './routes/message.route.js'
+import dotenv from "dotenv"
+import { ConnectDB } from './lib/db.js';
+import cookieParser from 'cookie-parser';
+import cors from "cors"
+
+dotenv.config()
+const app = express();
+const PORT = process.env.PORT
+
+
+
+// Increase the payload size limit
+app.use(express.json({ limit: "50mb" }));  
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+// Your other middlewares...
+
+
+app.use(cookieParser())
+app.use(cors({
+  origin : "http://localhost:5173",
+  credentials : true
+}));
+
+app.use("/api/auth",authRoutes);
+app.use("/api/message",messageRoutes);
+
+app.listen(PORT, () => {
+    console.log("WE are Listing at http://localhost:"+PORT);
+    ConnectDB()
+  });
