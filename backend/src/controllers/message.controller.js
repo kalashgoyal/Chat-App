@@ -1,6 +1,6 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
-
+import { getReceiverSocketId ,io } from "../lib/socket.js";
 import cloudinary from "../lib/cloudinary.js";
 
 
@@ -34,6 +34,70 @@ export const getMessages = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const deleteMessageForMe = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await Message.findById(messageId);
+    if (!message) return res.status(404).json({ error: "Message not found" });
+
+    // If the user already deleted it, don't add again
+    if (message.deletedBy.includes(userId)) {
+      return res.status(400).json({ error: "Message already deleted for you" });
+    }
+
+    await Message.findByIdAndUpdate(messageId, { $push: { deletedBy: userId } });
+
+    res.status(200).json({ message: "Message deleted for you" });
+  } catch (error) {
+    console.error("Error deleting message for user:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
+export const deleteMessageForEveryone = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await Message.findById(messageId);
+    if (!message) return res.status(404).json({ error: "Message not found" });
+
+    if (message.senderId.toString() !== userId.toString()) {
+      return res.status(403).json({ error: "You can only delete your own messages for everyone" });
+    }
+
+    await Message.findByIdAndDelete(messageId);
+
+    res.status(200).json({ message: "Message deleted for everyone" });
+  } catch (error) {
+    console.error("Error deleting message for everyone:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
+export const clearChat = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { chatWith } = req.params;
+
+    await Message.updateMany(
+      { $or: [{ senderId: userId, receiverId: chatWith }, { senderId: chatWith, receiverId: userId }] },
+      { $push: { deletedBy: userId } }
+    );
+
+    res.status(200).json({ message: "Chat cleared for you" });
+  } catch (error) {
+    console.error("Error clearing chat:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
 
 export const sendMessage = async (req, res) => {
   try {
