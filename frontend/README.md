@@ -1,3 +1,23 @@
+SETUP INSTRUCTIONS
+
+1. Open the backend folder.
+2. Create a file named .env.
+3. Copy the variables from .env.example.
+4. Enter the required environment variables.
+5. Open terminal in backend and run:
+   npm install
+
+6. Start backend:
+   npm run dev
+
+7. Open another terminal in frontend and run:
+   npm install
+
+8. Start frontend:
+   npm run dev
+
+
+   
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
